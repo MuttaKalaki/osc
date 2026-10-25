@@ -1,1 +1,25 @@
+view.php
+<?php
+require "db.php";
+$result = $conn->query("SELECT id, name, email, message FROM feedback ORDER BY id DESC");
+?>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feedback Details</title></head><body>
+<h2>Feedback Details</h2>
+<table border="1" cellpadding="8"><tr><th>ID</th><th>Name</th><th>Email</th><th>Message</th></tr>
+<?php while ($row = $result->fetch_assoc()): ?>
+<tr>
+<td><?php echo (int)$row["id"]; ?></td>
+<td><?php echo htmlspecialchars($row["name"]); ?></td>
+<td><?php echo htmlspecialchars($row["email"]); ?></td>
+<td><?php echo htmlspecialchars($row["message"]); ?></td>
+</tr>
+<?php endwhile; ?>
+</table><a href="index.php">Back to Form</a></body></html>
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Steps to run:
+1. Start Apache and MySQL in XAMPP.
+2. Open http://localhost/phpmyadmin and run the SQL setup.
+3. Save db.php, index.php, and view.php in C:\\xampp\\htdocs\\FeedbackSystem.
+4. Visit http://localhost/FeedbackSystem/index.php and submit feedback.
+5. Select View Feedback to see stored records.
