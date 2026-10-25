@@ -1,1 +1,70 @@
+Database setup (phpMyAdmin SQL tab)
+CREATE DATABASE login_db;
+USE login_db;
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL
+);
+Create a password hash once using PHP: save this temporarily as make_hash.php in the project folder, open it in the browser, copy the result into the INSERT query, then delete make_hash.php.
+<?php echo password_hash("demo123", PASSWORD_DEFAULT); ?>
+INSERT INTO users (username, password_hash)
+VALUES ('admin', 'PASTE_THE_GENERATED_HASH_HERE');
+db.php
+<?php
+$conn = new mysqli("localhost", "root", "", "login_db");
+if ($conn->connect_error) die("Database connection failed");
+$conn->set_charset("utf8mb4");
+?>
+login.php
+<?php
+session_start();
+require "db.php";
+$error = "";
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $username = trim($_POST["username"] ?? "");
+    $password = $_POST["password"] ?? "";
+    $stmt = $conn->prepare("SELECT password_hash FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->bind_result($hash);
+    if ($stmt->fetch() && password_verify($password, $hash)) {
+        $_SESSION["username"] = $username;
+        $stmt->close();
+        header("Location: dashboard.php");
+        exit;
+    }
+    $stmt->close();
+    $error = "Invalid username or password";
+}
+?>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>User Login</title></head><body>
+<h2>User Login</h2><p><?php echo htmlspecialchars($error); ?></p>
+<form method="post"><label>Username <input name="username" required></label><br>
+<label>Password <input type="password" name="password" required></label><br>
+<button type="submit">Login</button></form></body></html>
+dashboard.php
+<?php
+session_start();
+if (!isset($_SESSION["username"])) { header("Location: login.php"); exit; }
+?>
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Dashboard</title></head><body>
+<h1>Welcome, <?php echo htmlspecialchars($_SESSION["username"]); ?></h1>
+<p>You have successfully logged in.</p><a href="logout.php">Logout</a>
+</body></html>
+logout.php
+<?php
+session_start();
+$_SESSION = [];
+session_destroy();
+header("Location: login.php");
+exit;
+?>
 
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Steps to run:
+1. Start Apache and MySQL.
+2. Run the SQL setup in phpMyAdmin and insert the generated password hash.
+3. Save db.php, login.php, dashboard.php, and logout.php in C:\\xampp\\htdocs\\LoginSystem.
+4. Open http://localhost/LoginSystem/login.php and sign in using username admin and password demo123.
