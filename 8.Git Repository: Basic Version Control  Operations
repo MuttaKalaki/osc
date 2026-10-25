@@ -1,1 +1,23 @@
+Commands
+git --version
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
+git push -u origin main
 
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Steps to run:
+1. Install Git and create an empty repository on GitHub.
+2. Open a terminal in your project directory.
+3. Run the commands above in order, replacing the remote URL with your repository URL.
+4. If Git asks for identity, set it with git config --global user.name "Your Name" and git config --global user.email "you@example.com".
+5. Complete GitHub authentication when prompted. Do not put passwords or access tokens directly into source files.
