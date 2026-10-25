@@ -1,1 +1,66 @@
+Setup
+mkdir employee-portal
+cd employee-portal
+npm init -y
+npm install express mongoose
+server.js
+const express = require("express");
+const mongoose = require("mongoose");
+const app = express();
+app.use(express.urlencoded({ extended: true }));
+ 
+const Employee = mongoose.model("Employee", new mongoose.Schema({
+  empId: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
+  department: { type: String, required: true },
+  designation: { type: String, required: true },
+  salary: { type: Number, required: true },
+  joiningDate: { type: Date, required: true }
+}));
+ 
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+app.get("/", async (req, res) => {
+  try {
+    const employees = await Employee.find().sort({ joiningDate: -1 }).lean();
+    const rows = employees.map(e => `<tr><td>${esc(e.empId)}</td><td>${esc(e.name)}</td><td>${esc(e.email)}</td><td>${esc(e.phone)}</td><td>${esc(e.department)}</td><td>${esc(e.designation)}</td><td>${esc(e.salary)}</td><td>${new Date(e.joiningDate).toLocaleDateString()}</td></tr>`).join("");
+    res.send(`<!doctype html><html><head><meta charset="UTF-8"><title>Employee Portal</title></head><body>
+    <h1>Employee Information Portal</h1><h2>Add Employee</h2>
+    <form method="post" action="/add">
+    <input name="empId" placeholder="Employee ID" required>
+    <input name="name" placeholder="Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input name="phone" placeholder="Phone" required>
+    <input name="department" placeholder="Department" required>
+    <input name="designation" placeholder="Designation" required>
+    <input type="number" name="salary" placeholder="Salary" min="0" required>
+    <input type="date" name="joiningDate" required>
+    <button>Add Employee</button></form>
+    <h2>Employee Details</h2><table border="1" cellpadding="6"><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Department</th><th>Designation</th><th>Salary</th><th>Joining Date</th></tr>${rows}</table>
+    </body></html>`);
+  } catch (e) { res.status(500).send("Could not load employees. Check MongoDB connection."); }
+});
+app.post("/add", async (req, res) => {
+  try {
+    const salary = Number(req.body.salary);
+    if (!Number.isFinite(salary) || salary < 0) return res.status(400).send("Invalid salary.");
+    await Employee.create({ ...req.body, salary, joiningDate: new Date(req.body.joiningDate) });
+    res.redirect("/");
+  } catch (e) {
+    res.status(400).send("Could not save employee. Check that Employee ID is unique.");
+  }
+});
+mongoose.connect("mongodb://127.0.0.1:27017/employee_portal")
+  .then(() => app.listen(3000, () => console.log("Server running at http://localhost:3000")))
+  .catch(err => { console.error("MongoDB connection failed:", err.message); process.exit(1); });
 
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Steps to run:
+1. Install/start MongoDB Community Server locally (or use your own MongoDB connection URI).
+2. Install dependencies using the commands above.
+3. Run: node server.js
+4. Open http://localhost:3000, enter employee details, and click Add Employee.
+5. Employee records are stored in the employee_portal database. This compact example does not include authentication, edit, or delete features.
